@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YaaChuu 語言學習計劃</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Noto+Sans+KR:wght@300;400;500&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0e0e0f;--surface:#161618;--surface2:#1e1e21;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+  --text:#f0ede8;--muted:#7a7875;
+  --accent-kr:#e8825a;--accent-jp:#7ab8f5;
+  --accent-kr-dim:rgba(232,130,90,0.12);--accent-jp-dim:rgba(122,184,245,0.12);
+  --green:#6fcf97;--green-dim:rgba(111,207,151,0.1);
+  --amber:#f0c060;--amber-dim:rgba(240,192,96,0.1);
+  --radius:12px;--radius-sm:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;min-height:100vh;overflow-x:hidden}
+.app{display:flex;height:100vh}
+.sidebar{width:230px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:24px 0;overflow-y:auto}
+.logo-wrap{padding:0 20px 20px;border-bottom:1px solid var(--border);margin-bottom:14px}
+.logo-text{font-family:'DM Serif Display',serif;font-size:17px;color:var(--text);line-height:1.2}
+.logo-sub{font-size:10px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-top:3px}
+.lang-switch{display:flex;margin:0 16px 14px;background:var(--surface2);border-radius:var(--radius-sm);padding:3px;gap:2px}
+.lang-btn{flex:1;padding:6px;border:none;border-radius:6px;font-family:'DM Mono',monospace;font-size:12px;cursor:pointer;transition:all .2s;background:transparent;color:var(--muted)}
+.lang-btn.kr.active{background:var(--accent-kr);color:#1a0e08;font-weight:500}
+.lang-btn.jp.active{background:var(--accent-jp);color:#071525;font-weight:500}
+.streak-box{margin:0 16px 14px;background:var(--surface2);border-radius:var(--radius-sm);padding:10px 12px;display:flex;align-items:center;gap:10px}
+.streak-fire{font-size:20px}
+.streak-num{font-size:22px;font-weight:500;color:var(--amber);line-height:1}
+.streak-label{font-size:10px;color:var(--muted);line-height:1.4}
+.nav-section{font-size:9px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;padding:10px 20px 5px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 20px;cursor:pointer;border:none;background:transparent;color:var(--muted);font-family:'DM Mono',monospace;font-size:12px;text-align:left;width:100%;transition:all .15s;border-left:2px solid transparent;letter-spacing:.02em}
+.nav-item:hover{color:var(--text);background:rgba(255,255,255,.03)}
+.nav-item.active{color:var(--text);border-left-color:var(--accent)}
+.nav-item.active .nav-dot{background:var(--accent)}
+.nav-dot{width:6px;height:6px;border-radius:50%;background:var(--border2);flex-shrink:0}
+.sidebar-footer{margin-top:auto;padding:14px 20px 0;border-top:1px solid var(--border)}
+.level-badge{font-size:10px;color:var(--muted);background:var(--surface2);border-radius:99px;padding:4px 10px;display:inline-block}
+.main{flex:1;overflow-y:auto;display:flex;flex-direction:column}
+.page{display:none;flex-direction:column;min-height:100%}
+.page.active{display:flex}
+.page-header{padding:26px 36px 18px;border-bottom:1px solid var(--border);flex-shrink:0}
+.page-title{font-family:'DM Serif Display',serif;font-size:26px;font-style:italic}
+.page-sub{font-size:11px;color:var(--muted);margin-top:4px;letter-spacing:.06em}
+
+/* TODAY */
+.today-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:24px 36px}
+@media(max-width:800px){.today-grid{grid-template-columns:1fr}}
+.today-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;animation:fadeIn .35s ease}
+.today-card.full{grid-column:1/-1}
+.tc-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.tc-title{font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+.tc-badge{font-size:10px;padding:3px 8px;border-radius:99px;background:var(--accent-dim);color:var(--accent)}
+.wod-char{font-size:54px;line-height:1;margin-bottom:8px;cursor:pointer;text-align:center;display:block;transition:opacity .15s}
+.wod-char:hover{opacity:.7}
+.wod-roman{font-size:12px;color:var(--muted);letter-spacing:.06em;text-align:center;margin-bottom:4px}
+.wod-trans{font-size:17px;color:var(--text);text-align:center;margin-bottom:10px}
+.wod-example{font-size:12px;color:var(--muted);line-height:1.6;padding:8px 12px;background:var(--surface2);border-radius:var(--radius-sm);cursor:pointer;margin-bottom:8px}
+.wod-example:hover{opacity:.8}
+.wod-tip{font-size:11px;color:var(--muted);line-height:1.5;margin-top:8px}
+.play-pill{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border-radius:99px;font-size:11px;cursor:pointer;background:var(--accent-dim);color:var(--accent);border:1px solid var(--border2);margin-top:2px;transition:all .15s}
+.play-pill:hover{background:var(--accent);color:#fff}
+.phrase-mini{padding:9px 0;border-bottom:1px solid var(--border)}
+.phrase-mini:last-child{border-bottom:none}
+.phrase-mini-native{font-size:14px;margin-bottom:2px;cursor:pointer;display:flex;align-items:center;justify-content:space-between}
+.phrase-mini-native:hover{opacity:.75}
+.phrase-mini-roman{font-size:10px;color:var(--muted);margin-bottom:1px}
+.phrase-mini-trans{font-size:11px;color:var(--muted)}
+.week-dots{display:flex;gap:5px;margin-top:10px;flex-wrap:wrap}
+.week-dot{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:flex-start;flex-direction:column;justify-content:center;font-size:9px;border:1px solid var(--border2);color:var(--muted);gap:1px}
+.week-dot.done{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
+.week-dot.today-dot{border-color:var(--accent);color:var(--accent);font-weight:500}
+.progress-row{display:flex;align-items:center;gap:10px;margin-bottom:7px}
+.progress-lbl{font-size:11px;color:var(--muted);width:40px;flex-shrink:0}
+.progress-track{flex:1;height:5px;background:var(--border2);border-radius:99px;overflow:hidden}
+.progress-fill{height:100%;border-radius:99px;background:var(--accent);transition:width .6s ease}
+.progress-pct{font-size:11px;color:var(--muted);width:30px;text-align:right}
+.challenge-prompt{font-size:13px;color:var(--text);line-height:1.6;padding:10px 14px;background:var(--surface2);border-radius:var(--radius-sm);border-left:2px solid var(--accent);margin-bottom:8px}
+.challenge-hint{font-size:11px;color:var(--muted);margin-bottom:10px;line-height:1.5}
+.challenge-input{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:10px 14px;color:var(--text);font-family:'DM Mono',monospace;font-size:13px;outline:none;margin-bottom:10px;transition:border-color .15s}
+.challenge-input:focus{border-color:var(--accent)}
+.challenge-input::placeholder{color:var(--muted)}
+.challenge-btn{padding:8px 16px;border:none;border-radius:var(--radius-sm);background:var(--accent);color:var(--bg);font-family:'DM Mono',monospace;font-size:12px;cursor:pointer;transition:opacity .15s}
+.challenge-btn:hover{opacity:.85}
+.challenge-result{display:none;margin-top:10px;padding:10px 14px;border-radius:var(--radius-sm);font-size:12px;line-height:1.6}
+.result-good{background:var(--green-dim);border:1px solid rgba(111,207,151,.2);color:var(--green)}
+.result-ok{background:var(--amber-dim);border:1px solid rgba(240,192,96,.2);color:var(--amber)}
+.done-btn{padding:7px 14px;border:1px solid var(--border2);border-radius:var(--radius-sm);background:transparent;color:var(--muted);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;margin-top:10px;transition:all .15s;width:100%;text-align:center}
+.done-btn:hover{background:var(--accent-dim);color:var(--accent);border-color:var(--accent)}
+.done-btn.completed{background:var(--green-dim);color:var(--green);border-color:rgba(111,207,151,.3)}
+
+/* ALPHABET */
+.alpha-content{overflow-y:auto;flex:1}
+.alpha-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(86px,1fr));gap:8px;padding:16px 36px}
+.alpha-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 10px;text-align:center;cursor:pointer;transition:all .15s}
+.alpha-card:hover{border-color:var(--border2);background:var(--surface2);transform:translateY(-1px)}
+.alpha-card.playing{border-color:var(--accent);background:var(--accent-dim)}
+.alpha-char{font-size:28px;line-height:1;margin-bottom:5px}
+.alpha-roman{font-size:11px;color:var(--muted);letter-spacing:.05em}
+.alpha-hint{font-size:10px;color:var(--muted);margin-top:2px;opacity:.7}
+.sec-div{padding:8px 36px 2px;font-size:10px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase}
+
+/* PHRASES */
+.scenario-tabs{display:flex;gap:6px;padding:14px 36px;flex-wrap:wrap;border-bottom:1px solid var(--border);flex-shrink:0}
+.s-tab{padding:6px 14px;border:1px solid var(--border2);border-radius:99px;font-size:11px;cursor:pointer;background:transparent;color:var(--muted);font-family:'DM Mono',monospace;transition:all .15s}
+.s-tab:hover{color:var(--text)}
+.s-tab.active{background:var(--accent-dim);color:var(--accent);border-color:var(--accent)}
+.phrases-list{padding:18px 36px;flex:1;overflow-y:auto}
+.phrase-row{display:flex;align-items:center;gap:14px;padding:13px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;cursor:pointer;transition:all .15s}
+.phrase-row:hover{border-color:var(--border2);background:var(--surface2)}
+.phrase-row.playing{border-color:var(--accent);background:var(--accent-dim)}
+.phrase-main{flex:1}
+.phrase-native{font-size:16px;margin-bottom:3px}
+.phrase-roman{font-size:11px;color:var(--muted);margin-bottom:2px}
+.phrase-trans{font-size:12px;color:var(--muted)}
+.play-circle{width:36px;height:36px;border-radius:50%;flex-shrink:0;background:var(--accent-dim);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--accent);transition:all .15s}
+.phrase-row:hover .play-circle{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* CHAT */
+.chat-wrap{display:flex;flex-direction:column;flex:1;overflow:hidden}
+.chat-config{padding:12px 36px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.config-label{font-size:11px;color:var(--muted)}
+.config-btn{padding:5px 12px;border:1px solid var(--border2);border-radius:99px;font-size:11px;cursor:pointer;background:transparent;color:var(--muted);font-family:'DM Mono',monospace;transition:all .15s}
+.config-btn:hover{color:var(--text)}
+.config-btn.active{background:var(--accent-dim);color:var(--accent);border-color:var(--accent)}
+.chat-messages{flex:1;overflow-y:auto;padding:22px 36px;display:flex;flex-direction:column;gap:14px}
+.msg{display:flex;gap:10px;max-width:78%}
+.msg.user{align-self:flex-end;flex-direction:row-reverse}
+.msg-avatar{width:30px;height:30px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;background:var(--surface2);border:1px solid var(--border)}
+.msg.ai .msg-avatar{background:var(--accent-dim);color:var(--accent);border-color:var(--accent)}
+.msg-bubble{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px 16px;font-size:14px;line-height:1.6}
+.msg.user .msg-bubble{background:var(--surface2);border-color:var(--border2)}
+.msg-native{font-size:16px;margin-bottom:4px}
+.msg-roman{font-size:11px;color:var(--muted);margin-bottom:4px}
+.msg-trans{font-size:12px;color:var(--muted)}
+.msg-play{display:inline-flex;align-items:center;gap:4px;margin-top:8px;padding:4px 10px;background:var(--accent-dim);border:1px solid var(--border2);border-radius:99px;font-size:11px;color:var(--accent);cursor:pointer;transition:all .15s}
+.msg-play:hover{background:var(--accent);color:#fff}
+.msg-tip{margin-top:8px;padding:8px 12px;background:var(--green-dim);border:1px solid rgba(111,207,151,.2);border-radius:8px;font-size:12px;color:var(--green);line-height:1.5}
+.chat-input-area{padding:12px 36px 20px;border-top:1px solid var(--border);flex-shrink:0}
+.chat-hint{font-size:11px;color:var(--muted);margin-bottom:9px;padding:7px 12px;background:var(--surface2);border-radius:var(--radius-sm);border-left:2px solid var(--accent)}
+.input-row{display:flex;gap:10px;align-items:flex-end}
+.chat-input{flex:1;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:12px 16px;color:var(--text);font-family:'DM Mono',monospace;font-size:14px;resize:none;outline:none;transition:border-color .15s;min-height:48px;max-height:120px}
+.chat-input:focus{border-color:var(--accent)}
+.chat-input::placeholder{color:var(--muted)}
+.send-btn{width:48px;height:48px;border-radius:50%;border:none;background:var(--accent);color:var(--bg);cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.send-btn:hover{opacity:.85;transform:scale(1.05)}
+.send-btn:disabled{opacity:.35;cursor:not-allowed;transform:none}
+.voice-btn{width:48px;height:48px;border-radius:50%;border:1px solid var(--border2);background:var(--surface2);color:var(--muted);cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.voice-btn.listening{background:var(--accent-dim);color:var(--accent);border-color:var(--accent);animation:pulse 1.2s infinite}
+.chat-intro{text-align:center;padding:36px 20px;color:var(--muted);margin:auto}
+.chat-intro-title{font-family:'DM Serif Display',serif;font-size:22px;color:var(--text);margin-bottom:10px;font-style:italic}
+.chat-intro-sub{font-size:13px;line-height:1.7;max-width:380px;margin:0 auto 20px}
+.starter-btns{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.starter-btn{padding:8px 16px;border:1px solid var(--border2);border-radius:99px;font-size:12px;cursor:pointer;background:transparent;color:var(--text);font-family:'DM Mono',monospace;transition:all .15s}
+.starter-btn:hover{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
+.typing-dots{display:flex;gap:4px;padding:4px 0}
+.typing-dots span{width:6px;height:6px;border-radius:50%;background:var(--muted);animation:bounce 1.2s infinite}
+.typing-dots span:nth-child(2){animation-delay:.2s}
+.typing-dots span:nth-child(3){animation-delay:.4s}
+.loading-bar{height:2px;background:var(--border);position:fixed;top:0;left:0;right:0;z-index:999;display:none}
+.loading-bar.active{display:block}
+.loading-bar::after{content:'';display:block;height:100%;background:var(--accent);animation:load 1.5s ease infinite}
+.kr{--accent:var(--accent-kr);--accent-dim:var(--accent-kr-dim)}
+.jp{--accent:var(--accent-jp);--accent-dim:var(--accent-jp-dim)}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
+@keyframes load{0%{width:0;margin-left:0}50%{width:60%;margin-left:20%}100%{width:0;margin-left:100%}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body class="kr">
+<div class="loading-bar" id="loadingBar"></div>
+<div class="app">
+  <div class="sidebar">
+    <div class="logo-wrap">
+      <div class="logo-text">YaaChuu<br>語言學習計劃</div>
+      <div class="logo-sub">for music people</div>
+    </div>
+    <div class="lang-switch">
+      <button class="lang-btn kr active" onclick="setLang('kr')">🇰🇷 한국어</button>
+      <button class="lang-btn jp" onclick="setLang('jp')">🇯🇵 日本語</button>
+    </div>
+    <div class="streak-box">
+      <div class="streak-fire">🔥</div>
+      <div>
+        <div class="streak-num" id="streakNum">0</div>
+        <div class="streak-label">天連續學習</div>
+      </div>
+    </div>
+    <div class="nav-section">學習</div>
+    <button class="nav-item active" onclick="showPage('today',this)"><span class="nav-dot"></span>今日課程</button>
+    <button class="nav-item" onclick="showPage('alphabet',this)"><span class="nav-dot"></span>字母發音</button>
+    <button class="nav-item" onclick="showPage('phrases',this)"><span class="nav-dot"></span>情境句型</button>
+    <div class="nav-section">練習</div>
+    <button class="nav-item" onclick="showPage('chat',this)"><span class="nav-dot"></span>AI 對話練習</button>
+    <div class="sidebar-footer">
+      <div style="font-size:9px;color:var(--muted);letter-spacing:.08em;margin-bottom:4px">學習階段</div>
+      <div class="level-badge" id="levelBadge">第 1 階段 · 入門</div>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- TODAY -->
+    <div class="page active" id="page-today">
+      <div class="page-header">
+        <div class="page-title" id="todayTitle">今日課程</div>
+        <div class="page-sub" id="todayDate"></div>
+      </div>
+      <div class="today-grid" id="todayGrid"></div>
+    </div>
+
+    <!-- ALPHABET -->
+    <div class="page" id="page-alphabet">
+      <div class="page-header">
+        <div class="page-title" id="alphaTitle">韓文字母</div>
+        <div class="page-sub">點擊字母聆聽發音 · 附英文拼音輔助</div>
+      </div>
+      <div class="alpha-content" id="alphaContent"></div>
+    </div>
+
+    <!-- PHRASES -->
+    <div class="page" id="page-phrases">
+      <div class="page-header">
+        <div class="page-title">情境句型</div>
+        <div class="page-sub">點擊句子聆聽發音 · 按場景分類</div>
+      </div>
+      <div class="scenario-tabs" id="scenarioTabs"></div>
+      <div class="phrases-list" id="phrasesList"></div>
+    </div>
+
+    <!-- CHAT -->
+    <div class="page" id="page-chat">
+      <div class="page-header">
+        <div class="page-title">AI 對話練習</div>
+        <div class="page-sub">選場景開口練習 · 即時發音 + 學習提示</div>
+      </div>
+      <div class="chat-wrap">
+        <div class="chat-config" id="chatConfig"></div>
+        <div class="chat-messages" id="chatMessages">
+          <div class="chat-intro">
+            <div class="chat-intro-title">準備好了嗎？</div>
+            <div class="chat-intro-sub">選一個情境，輸入你想說的話。AI 會用正確發音回覆並解析句子。</div>
+            <div class="starter-btns" id="starterBtns"></div>
+          </div>
+        </div>
+        <div class="chat-input-area">
+          <div class="chat-hint" id="chatHint">選一個情境開始對話 ↑</div>
+          <div class="input-row">
+            <textarea class="chat-input" id="chatInput" placeholder="輸入你想說的話..." rows="1" onkeydown="handleEnter(event)"></textarea>
+            <button class="voice-btn" id="voiceBtn" onclick="toggleVoice()">🎤</button>
+            <button class="send-btn" id="sendBtn" onclick="sendMessage()">↑</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = "https://api.anthropic.com/v1/messages";
+let lang = 'kr', chatHistory = [], isListening = false, rec = null, activeChat = null;
+
+// ── DAILY POOLS ──────────────────────────────────────────────────────
+const WOD_KR = [
+  {c:'안녕',r:'an-nyeong',t:'你好（輕鬆）',ex:'안녕! 오랜만이야 — 嘿！好久不見',tip:'音樂節場合常用，比 안녕하세요 更輕鬆'},
+  {c:'음악',r:'eu-mak',t:'音樂',ex:'음악 좋아해요? — 你喜歡音樂嗎？',tip:'打開所有話題的魔法詞'},
+  {c:'공연',r:'gong-yeon',t:'演出',ex:'공연 어땠어요? — 演出怎麼樣？',tip:'音樂節最常聽到的詞之一'},
+  {c:'인디',r:'in-di',t:'獨立音樂',ex:'인디 씬 좋아요 — 我喜歡獨立樂圈',tip:'英文 indie 的借詞'},
+  {c:'밴드',r:'baen-deu',t:'樂團',ex:'어느 밴드 좋아해요? — 你喜歡哪個樂團？',tip:'英文 band 的借詞'},
+  {c:'페스티벌',r:'pe-seu-ti-beol',t:'音樂節',ex:'페스티벌에 왔어요 — 我來音樂節了',tip:'英文 festival 的借詞'},
+  {c:'매니저',r:'mae-ni-jeo',t:'經紀人',ex:'저는 매니저예요 — 我是經紀人',tip:'英文借詞，自我介紹直接用'},
+  {c:'대박',r:'dae-bak',t:'超厲害！',ex:'공연 대박이에요! — 這場演出超棒！',tip:'最萬用的讚嘆詞'},
+  {c:'진짜',r:'jin-jja',t:'真的',ex:'진짜 멋있어요 — 真的很帥',tip:'驚嘆或確認時都能用，超高頻'},
+  {c:'연락',r:'yeol-lak',t:'聯絡',ex:'나중에 연락해요 — 之後聯絡',tip:'認識新朋友後最常說的詞'},
+  {c:'분위기',r:'bun-wi-gi',t:'氣氛',ex:'분위기가 너무 좋아요 — 氣氛太好了',tip:'音樂節或酒吧場合超好用'},
+  {c:'앨범',r:'ael-beom',t:'專輯',ex:'새 앨범 나왔어요? — 新專輯出了嗎？',tip:'問樂團近況的好開場白'},
+  {c:'녹음',r:'no-geum',t:'錄音',ex:'지금 녹음 중이에요 — 現在在錄音',tip:'錄音室相關場合常用'},
+  {c:'완전',r:'wan-jeon',t:'超～ / 完全',ex:'완전 좋아요! — 超喜歡！',tip:'加在形容詞前加強語氣'},
+  {c:'감동',r:'gam-dong',t:'感動',ex:'정말 감동이에요 — 真的很感動',tip:'聽到觸動心靈的音樂時說'},
+  {c:'홍대',r:'hong-dae',t:'弘大（地名）',ex:'홍대에 가봤어요? — 你去過弘大嗎？',tip:'首爾獨立音樂聚集地'},
+  {c:'건배',r:'geon-bae',t:'乾杯',ex:'건배! — 乾杯！',tip:'最簡單最有用的社交詞'},
+  {c:'다음',r:'da-eum',t:'下次',ex:'다음에 또 봐요 — 下次再見',tip:'告別時的標準說法'},
+  {c:'추천',r:'chu-cheon',t:'推薦',ex:'맛집 추천해줘요 — 推薦好餐廳',tip:'可以搭配任何事物'},
+  {c:'투어',r:'tu-eo',t:'巡演',ex:'투어 일정 있어요? — 有巡演行程嗎？',tip:'邀請海外演出前先問'},
+  {c:'라이브',r:'ra-i-beu',t:'Live 現場',ex:'라이브가 최고예요 — 現場最棒了',tip:'英文借詞'},
+  {c:'노래',r:'no-rae',t:'歌曲',ex:'이 노래 알아요? — 你知道這首歌嗎？',tip:'音樂話題必備詞'},
+  {c:'세트리스트',r:'se-teu-ri-seu-teu',t:'Setlist',ex:'세트리스트 봤어요? — 你看到 setlist 了嗎？',tip:'音樂節討論必備'},
+  {c:'앙코르',r:'ang-ko-reu',t:'Encore 安可',ex:'앙코르 불러요! — 喊安可！',tip:'演出結束時喊'},
+  {c:'맥주',r:'maek-ju',t:'啤酒',ex:'맥주 한 잔 해요 — 喝一杯啤酒吧',tip:'演後聚飲的起手式'},
+  {c:'취미',r:'chwi-mi',t:'興趣',ex:'취미가 뭐예요? — 你的興趣是什麼？',tip:'認識新朋友時的好問題'},
+  {c:'무대',r:'mu-dae',t:'舞台',ex:'무대가 정말 멋있었어요 — 舞台真的很棒',tip:'談演出時常用'},
+  {c:'가사',r:'ga-sa',t:'歌詞',ex:'가사가 너무 좋아요 — 歌詞太好了',tip:'聊音樂細節時用'},
+  {c:'리듬',r:'ri-deum',t:'節奏',ex:'리듬이 정말 좋아요 — 節奏真的很棒',tip:'英文借詞 rhythm'},
+  {c:'오늘',r:'o-neul',t:'今天',ex:'오늘 정말 즐거웠어요 — 今天真的很開心',tip:'道別時的標準句型'},
+  {c:'감사합니다',r:'gam-sa-ham-ni-da',t:'謝謝',ex:'도와줘서 감사합니다 — 謝謝你的幫忙',tip:'比 고마워요 更正式'},
+  {c:'맛있어요',r:'ma-si-sseo-yo',t:'很好吃',ex:'진짜 맛있어요! — 真的很好吃！',tip:'不管餐廳還是聊天都好用'},
+  {c:'이름',r:'i-reum',t:'名字',ex:'이름이 뭐예요? — 你叫什麼名字？',tip:'第一次認識人一定會用'},
+  {c:'나라',r:'na-ra',t:'國家',ex:'어느 나라에서 왔어요? — 你從哪個國家來？',tip:'自我介紹的基本問法'},
+  {c:'협업',r:'hyeo-beop',t:'協作',ex:'협업 제안이에요 — 這是合作提案',tip:'比 collaboration 更現代'},
+  {c:'무료',r:'mu-ryo',t:'免費',ex:'무료 입장이에요? — 是免費入場嗎？',tip:'旅遊和活動都常用'},
+  {c:'예약',r:'ye-yak',t:'預約',ex:'예약 필요해요? — 需要預約嗎？',tip:'住宿餐廳活動都會用'},
+  {c:'지하철',r:'ji-ha-cheol',t:'地鐵',ex:'지하철 타요 — 搭地鐵',tip:'首爾交通必備詞'},
+  {c:'소울',r:'so-ul',t:'靈魂感',ex:'소울이 넘쳐요 — 充滿靈魂感',tip:'稱讚音樂表現的好詞'},
+  {c:'인기',r:'in-gi',t:'人氣',ex:'요즘 인기 많아요 — 最近人氣很旺',tip:'聊樂團發展狀況'},
+  {c:'팬',r:'paen',t:'粉絲',ex:'큰 팬이에요 — 我是大粉絲',tip:'英文 fan 的借詞'},
+  {c:'독립',r:'dong-nip',t:'獨立',ex:'독립 레이블이에요 — 是獨立廠牌',tip:'聊廠牌歸屬時用'},
+  {c:'다시',r:'da-si',t:'再次',ex:'다시 만나요 — 再見面吧',tip:'比 또 稍微正式一點'},
+  {c:'얼마나',r:'eol-ma-na',t:'多少 / 多久',ex:'얼마나 걸려요? — 要多久？',tip:'問路或問時間都能用'},
+  {c:'정말',r:'jeong-mal',t:'真的（書面感）',ex:'정말 감사해요 — 真的很感謝',tip:'比 진짜 稍微正式'},
+  {c:'클럽',r:'keul-leob',t:'Club',ex:'오늘 클럽 가요? — 今天去 Club 嗎？',tip:'演出結束後的常見去處'},
+  {c:'사인',r:'sa-in',t:'簽名',ex:'사인 해주실 수 있어요? — 可以簽名嗎？',tip:'認識樂手時'},
+  {c:'공통점',r:'gong-tong-jeom',t:'共同點',ex:'공통점이 많네요 — 我們有很多共同點',tip:'建立關係的好句子'},
+  {c:'작업',r:'ja-geop',t:'作業 / 合作',ex:'같이 작업해요 — 一起合作吧',tip:'音樂製作場合常用'},
+  {c:'재밌어요',r:'jae-mi-sseo-yo',t:'很好玩 / 有趣',ex:'오늘 진짜 재밌었어요 — 今天真的很好玩',tip:'聚會結束時說'},
+];
+const WOD_JP = [
+  {c:'音楽',r:'on-ga-ku',t:'音樂',ex:'音楽が好きです — 我喜歡音樂',tip:'聊天的最好開場詞'},
+  {c:'ライブ',r:'ra-i-bu',t:'現場演出',ex:'ライブどうでしたか？ — 演出怎麼樣？',tip:'英文借詞，日本音樂圈核心詞'},
+  {c:'バンド',r:'ban-do',t:'樂團',ex:'どんなバンドが好きですか？ — 你喜歡什麼樂團？',tip:'英文借詞 band'},
+  {c:'フェス',r:'fe-su',t:'音樂節（縮寫）',ex:'フェス行きますか？ — 你去音樂節嗎？',tip:'festival 縮寫，日本人常用'},
+  {c:'インディー',r:'in-di-i',t:'獨立音樂',ex:'インディーが好きです — 我喜歡獨立音樂',tip:'英文借詞 indie'},
+  {c:'はじめまして',r:'ha-ji-me-ma-shi-te',t:'初次見面',ex:'はじめまして！よろしく — 初次見面！請多關照',tip:'第一次見面的必備句'},
+  {c:'よろしく',r:'yo-ro-shi-ku',t:'請多關照',ex:'よろしくお願いします — 請多多關照',tip:'日本最常說的社交句'},
+  {c:'すごい',r:'su-go-i',t:'厲害！好棒！',ex:'すごいライブでした — 演出好厲害',tip:'相槌用詞，表示驚嘆'},
+  {c:'なるほど',r:'na-ru-ho-do',t:'原來如此',ex:'なるほど、そうですね — 原來如此',tip:'聽對方說話時的相槌詞，非常重要'},
+  {c:'マネージャー',r:'ma-ne-e-jaa',t:'經紀人',ex:'マネージャーをしています — 我是經紀人',tip:'英文借詞，直接用'},
+  {c:'コラボ',r:'ko-ra-bo',t:'合作（口語）',ex:'コラボしたいです — 想合作',tip:'collaboration 縮寫'},
+  {c:'アルバム',r:'a-ru-ba-mu',t:'專輯',ex:'新しいアルバム出ましたか？ — 新專輯出了嗎？',tip:'問樂團近況好用'},
+  {c:'やばい',r:'ya-ba-i',t:'太屌了！',ex:'やばい、最高！ — 太棒了！',tip:'年輕人口語，語氣很強'},
+  {c:'めちゃ',r:'me-cha',t:'超～',ex:'めちゃ好き！ — 超喜歡！',tip:'很口語，類似「真的」'},
+  {c:'雰囲気',r:'fun-i-ki',t:'氣氛',ex:'雰囲気いいですね — 氣氛很好',tip:'稱讚場所或演出氛圍'},
+  {c:'下北沢',r:'shi-mo-ki-ta-za-wa',t:'下北澤',ex:'下北沢行きましたか？ — 你去過下北澤嗎？',tip:'東京獨立音樂聖地'},
+  {c:'乾杯',r:'kan-pai',t:'乾杯',ex:'乾杯！ — 乾杯！',tip:'發音跟中文很像'},
+  {c:'おすすめ',r:'o-su-su-me',t:'推薦',ex:'おすすめは何ですか？ — 有什麼推薦嗎？',tip:'萬用詞'},
+  {c:'また',r:'ma-ta',t:'再次',ex:'また会いましょう — 下次再見',tip:'道別最常說的一個字'},
+  {c:'名刺',r:'mei-shi',t:'名片',ex:'名刺交換できますか？ — 可以交換名片嗎？',tip:'日本商業場合非常重視'},
+  {c:'セトリ',r:'se-to-ri',t:'Setlist',ex:'セトリ見た？ — 你看到 setlist 了嗎？',tip:'日本音樂迷常用縮寫'},
+  {c:'アンコール',r:'an-koo-ru',t:'Encore 安可',ex:'アンコール！ — 安可！',tip:'演出結束後大喊'},
+  {c:'感動',r:'kan-dou',t:'感動',ex:'すごく感動しました — 非常感動',tip:'聽到觸動心靈的音樂時說'},
+  {c:'ビール',r:'bi-i-ru',t:'啤酒',ex:'ビール飲みますか？ — 喝啤酒嗎？',tip:'居酒屋必備，打開話題'},
+  {c:'趣味',r:'shu-mi',t:'興趣',ex:'趣味は何ですか？ — 你的興趣是什麼？',tip:'認識新朋友的好問題'},
+  {c:'ステージ',r:'su-te-e-ji',t:'舞台',ex:'ステージがきれいでした — 舞台很漂亮',tip:'英文借詞 stage'},
+  {c:'歌詞',r:'ka-shi',t:'歌詞',ex:'歌詞が美しい — 歌詞很美',tip:'聊音樂細節時用'},
+  {c:'リズム',r:'ri-zu-mu',t:'節奏',ex:'リズムが最高 — 節奏超棒',tip:'英文借詞 rhythm'},
+  {c:'ファン',r:'fan',t:'粉絲',ex:'大ファンです — 我是大粉絲',tip:'英文借詞 fan'},
+  {c:'人気',r:'nin-ki',t:'人氣',ex:'最近人気ですね — 最近很受歡迎',tip:'漢字跟中文同義'},
+  {c:'ツアー',r:'tsu-aa',t:'巡演',ex:'ツアーの予定は？ — 有巡演計劃嗎？',tip:'邀請前先問這個'},
+  {c:'無料',r:'mu-ryo',t:'免費',ex:'入場無料ですか？ — 是免費入場嗎？',tip:'跟中文一樣好記'},
+  {c:'予約',r:'yo-ya-ku',t:'預約',ex:'予約が必要ですか？ — 需要預約嗎？',tip:'餐廳和活動都常用'},
+  {c:'台湾',r:'ta-i-wan',t:'台灣',ex:'台湾から来ました — 我從台灣來',tip:'自我介紹必備'},
+  {c:'リハ',r:'ri-ha',t:'排練（縮寫）',ex:'リハの後に会いましょう — 排練後見面吧',tip:'rehearsal 縮寫'},
+  {c:'作品',r:'sa-ku-hin',t:'作品',ex:'この作品好きです — 我喜歡這個作品',tip:'可指歌、MV、專輯'},
+  {c:'地下鉄',r:'chi-ka-te-tsu',t:'地鐵',ex:'地下鉄どこですか？ — 地鐵在哪裡？',tip:'東京交通必備'},
+  {c:'迷子',r:'ma-i-go',t:'迷路',ex:'迷子になりました — 我迷路了',tip:'旅遊時的緊急詞'},
+  {c:'ソウル',r:'sou-ru',t:'靈魂感',ex:'ソウルを感じる — 感受到靈魂',tip:'稱讚音樂表演的好詞'},
+  {c:'独立',r:'do-ku-ri-tsu',t:'獨立',ex:'独立レーベルです — 是獨立廠牌',tip:'談廠牌時用'},
+  {c:'ほんとに',r:'hon-to-ni',t:'真的',ex:'ほんとにすごかった — 真的很厲害',tip:'本当に 的口語版'},
+  {c:'連絡',r:'ren-ra-ku',t:'聯絡',ex:'また連絡しますね — 之後再聯絡',tip:'認識後跟進的好詞'},
+  {c:'今日は',r:'kyo-wa',t:'今天',ex:'今日は最高でした — 今天真的很棒',tip:'結束對話的好句'},
+  {c:'ありがとう',r:'a-ri-ga-tou',t:'謝謝',ex:'本当にありがとう — 真的謝謝你',tip:'基本禮貌'},
+  {c:'どこ',r:'do-ko',t:'哪裡',ex:'どこから来ましたか？ — 你從哪裡來？',tip:'旅遊問路必備'},
+  {c:'いくら',r:'i-ku-ra',t:'多少錢',ex:'これはいくらですか？ — 這個多少錢？',tip:'購物必備'},
+  {c:'次に',r:'tsu-gi-ni',t:'下次',ex:'次に会いましょう — 下次再見面吧',tip:'道別時的自然說法'},
+  {c:'共通点',r:'kyou-tsuu-ten',t:'共同點',ex:'共通点が多いですね — 我們有很多共同點',tip:'建立關係的好句子'},
+  {c:'楽しかった',r:'ta-no-shi-kat-ta',t:'很開心（過去式）',ex:'今日は楽しかったです — 今天很開心',tip:'道別時必備'},
+  {c:'また',r:'ma-ta',t:'再次 / 又',ex:'また来ますね — 我會再來',tip:'告別和再聯絡都能用'},
+];
+
+const PHRASES_KR = [
+  ['저는 대만에서 온 매니저예요','jeo-neun dae-man-e-seo on mae-ni-jeo-ye-yo','我是從台灣來的經紀人'],
+  ['음악 이야기 더 해요','eu-mak i-ya-gi deo hae-yo','再多聊聊音樂吧'],
+  ['이 공연 정말 멋졌어요','i gong-yeon jeong-mal meot-jyeo-sseo-yo','這場演出真的很精彩'],
+  ['연락처 교환해요','yeol-lak-cheo gyo-hwan-hae-yo','交換聯絡方式吧'],
+  ['다음에 꼭 만나요','da-eum-e kkok man-na-yo','下次一定要再見面'],
+  ['오늘 진짜 즐거웠어요','o-neul jin-jja jeul-geo-wo-sseo-yo','今天真的很愉快'],
+  ['어디서 온 밴드예요?','eo-di-seo on baen-deu-ye-yo','是從哪裡來的樂團？'],
+  ['앨범 들어봤어요, 진짜 좋더라고요','ael-beom deu-reo-bwa-sseo-yo jin-jja jo-teo-ra-go-yo','聽了你們的專輯，真的很棒'],
+  ['대만에서도 공연해 주세요','dae-man-e-seo-do gong-yeon-hae ju-se-yo','也請來台灣演出'],
+  ['맥주 한잔 할래요?','maek-ju han-jan hal-lae-yo','要喝一杯啤酒嗎？'],
+  ['SNS 팔로우 해도 돼요?','SNS pal-lo-u hae-do dwae-yo','可以追蹤你的 SNS 嗎？'],
+  ['해외 투어 계획 있어요?','hae-oe tu-eo gye-hoek i-sseo-yo','有海外巡演計劃嗎？'],
+  ['협업 제안을 드리고 싶어요','hyeo-beop je-an-eul deu-ri-go si-peo-yo','我想提一個合作提案'],
+  ['명함 드릴게요','myeong-ham deu-ril-ge-yo','讓我給你我的名片'],
+  ['여기 분위기 너무 좋아요','yeo-gi bun-wi-gi neo-mu jo-a-yo','這裡的氣氛太好了'],
+  ['공연이 감동적이었어요','gong-yeon-i gam-dong-jeo-gi-eo-sseo-yo','演出非常感動'],
+  ['오늘 최고의 공연이었어요','o-neul choe-go-ui gong-yeon-i-eo-sseo-yo','今天是最棒的演出'],
+  ['어떤 음악이 전문이에요?','eo-tteon eu-mak-i jeon-mu-ni-e-yo','你專長什麼類型的音樂？'],
+  ['한국어 배우는 중이에요','han-gu-geo bae-u-neun jung-i-e-yo','我在學韓文'],
+  ['천천히 말해 주세요','cheon-cheon-hi mal-hae ju-se-yo','請說慢一點'],
+  ['다시 한 번 말씀해 주세요','da-si han beon mal-sseum-hae ju-se-yo','請再說一次'],
+  ['앙코르 불러요!','ang-ko-reu bul-leo-yo','喊安可！'],
+  ['같이 사진 찍어도 돼요?','ga-chi sa-jin ji-geo-do dwae-yo','可以一起拍照嗎？'],
+  ['음악 취향이 비슷하네요','eu-mak chwi-hyang-i bi-seu-ta-ne-yo','我們音樂喜好很相似'],
+  ['대만 음악도 들어봐요','dae-man eu-mak-do deu-reo-bwa-yo','也聽聽看台灣音樂吧'],
+  ['무대 에너지가 대단했어요','mu-dae e-neo-ji-ga dae-dan-hae-sseo-yo','舞台能量非常強大'],
+  ['건배! 우리의 음악을 위해!','geon-bae u-ri-ui eu-mak-eul wi-hae','乾杯！為了音樂！'],
+  ['꼭 다시 만나요','kkok da-si man-na-yo','一定要再見面'],
+  ['이름이 뭐예요?','i-reum-i mwo-ye-yo','你叫什麼名字？'],
+  ['홍대에 처음 왔어요','hong-dae-e cheo-eum wa-sseo-yo','第一次來弘大'],
+  ['이거 얼마예요?','i-geo eol-ma-ye-yo','這個多少錢？'],
+  ['길을 잃었어요','gi-reul i-reo-sseo-yo','我迷路了'],
+  ['추천 메뉴가 뭐예요?','chu-cheon me-nyu-ga mwo-ye-yo','推薦什麼菜？'],
+  ['카드 돼요?','ka-deu dwae-yo','可以刷卡嗎？'],
+  ['내일 공연도 봐요?','nae-il gong-yeon-do bwa-yo','明天的演出也看嗎？'],
+  ['공연 끝나고 어디 가요?','gong-yeon kkeut-na-go eo-di ga-yo','演出結束後去哪裡？'],
+  ['오늘 같이 있어서 좋았어요','o-neul ga-chi i-sseo-seo jo-a-sseo-yo','今天能在一起很開心'],
+  ['다음 공연은 어디예요?','da-eum gong-yeon-eun eo-di-ye-yo','下一場演出在哪裡？'],
+  ['드디어 만났네요!','deu-di-eo man-nan-ne-yo','終於見到你了！'],
+  ['지금 어디 있어요?','ji-geum eo-di i-sseo-yo','你現在在哪裡？'],
+  ['팬이 많네요','paen-i man-ne-yo','你有很多粉絲呢'],
+  ['이 맥주 어때요?','i maek-ju eo-ttae-yo','這啤酒怎麼樣？'],
+  ['한국 음식 진짜 좋아해요','han-guk eu-msik jin-jja jo-a-hae-yo','我真的很喜歡韓國料理'],
+  ['여기서 자주 와요?','yeo-gi-seo ja-ju wa-yo','你常來這裡嗎？'],
+  ['대만에도 인디씬이 있어요','dae-man-e-do in-di-ssin-i i-sseo-yo','台灣也有獨立音樂圈'],
+  ['아직 잘 못하지만 연습 중이에요','a-jik jal mo-ta-ji-man yeon-seup jung-i-e-yo','還不太會但在練習中'],
+  ['한국어 가르쳐 주세요!','han-gu-geo ga-reu-chyeo ju-se-yo','教我韓文！'],
+  ['소울이 넘쳐요','so-ul-i neom-chyeo-yo','充滿靈魂感'],
+  ['다음 앨범은 언제 나와요?','da-eum ael-beom-eun eon-je na-wa-yo','下一張專輯什麼時候出？'],
+  ['식당 추천해 주세요','sik-dang chu-cheon-hae ju-se-yo','請推薦餐廳'],
+];
+const PHRASES_JP = [
+  ['台湾からのマネージャーです','ta-i-wan-ka-ra-no-ma-ne-e-jaa-de-su','我是從台灣來的經紀人'],
+  ['音楽の話をもっとしましょう','on-ga-ku-no-ha-na-shi-wo-mot-to-shi-ma-shou','再多聊聊音樂吧'],
+  ['このライブ、本当に最高でした','ko-no-ra-i-bu-hon-tou-ni-sa-i-kou-de-shi-ta','這場演出真的最高'],
+  ['連絡先を交換しましょう','ren-ra-ku-sa-ki-wo-kou-kan-shi-ma-shou','交換聯絡方式吧'],
+  ['また絶対会いましょう','ma-ta-ze-tta-i-a-i-ma-shou','下次一定要再見面'],
+  ['今日は本当に楽しかったです','kyou-wa-hon-tou-ni-ta-no-shi-kat-ta-de-su','今天真的很開心'],
+  ['どこから来たバンドですか？','do-ko-ka-ra-ki-ta-ban-do-de-su-ka','是從哪裡來的樂團？'],
+  ['アルバム聴きました、最高でした','a-ru-ba-mu-ki-ki-ma-shi-ta-sa-i-kou-de-shi-ta','聽了你們的專輯，真的最高'],
+  ['台湾でもライブをしてください','ta-i-wan-de-mo-ra-i-bu-wo-shi-te-ku-da-sa-i','也請來台灣演出'],
+  ['ビールはいかがですか？','bi-i-ru-wa-i-ka-ga-de-su-ka','要喝啤酒嗎？'],
+  ['SNSフォローしてもいいですか？','SNS-fo-ro-u-shi-te-mo-i-i-de-su-ka','可以追蹤你的 SNS 嗎？'],
+  ['海外ツアーの予定はありますか？','ka-i-ga-i-tsu-aa-no-yo-tei-wa-a-ri-ma-su-ka','有海外巡演計劃嗎？'],
+  ['コラボのご提案をしたいのですが','ko-ra-bo-no-go-tei-an-wo-shi-ta-i-no-de-su-ga','我想提一個合作提案'],
+  ['名刺をお渡しします','mei-shi-wo-o-wa-ta-shi-shi-ma-su','讓我給你我的名片'],
+  ['ここの雰囲気、最高ですね','ko-ko-no-fu-n-i-ki-sa-i-kou-de-su-ne','這裡的氣氛太棒了'],
+  ['ライブがとても感動的でした','ra-i-bu-ga-to-te-mo-kan-dou-te-ki-de-shi-ta','演出非常感動'],
+  ['今日は最高のライブでした','kyou-wa-sa-i-kou-no-ra-i-bu-de-shi-ta','今天是最棒的演出'],
+  ['どんな音楽を専門にされてますか？','don-na-on-ga-ku-wo-sen-mon-ni-sa-re-te-ma-su-ka','你專長什麼類型的音樂？'],
+  ['日本語を勉強しています','ni-hon-go-wo-ben-kyou-shi-te-i-ma-su','我在學日文'],
+  ['ゆっくり話してもらえますか？','yuk-ku-ri-ha-na-shi-te-mo-ra-e-ma-su-ka','請說慢一點'],
+  ['もう一度おっしゃっていただけますか？','mou-i-chi-do-os-sha-tte-i-ta-da-ke-ma-su-ka','請再說一次'],
+  ['アンコール！','an-koo-ru','安可！'],
+  ['一緒に写真を撮ってもいいですか？','is-sho-ni-sha-shin-wo-tot-te-mo-i-i-de-su-ka','可以一起拍照嗎？'],
+  ['音楽の趣味が似ていますね','on-ga-ku-no-shu-mi-ga-ni-te-i-ma-su-ne','我們音樂喜好很相似'],
+  ['台湾の音楽も聴いてみてください','ta-i-wan-no-on-ga-ku-mo-ki-i-te-mi-te-ku-da-sa-i','也聽聽看台灣音樂吧'],
+  ['ステージのエネルギーが半端なかった','su-te-e-ji-no-e-ne-ru-gii-ga-han-pa-na-kat-ta','舞台能量非常強大'],
+  ['乾杯！音楽のために！','kan-pai-on-ga-ku-no-ta-me-ni','乾杯！為了音樂！'],
+  ['またぜひ会いましょう','ma-ta-ze-hi-a-i-ma-shou','一定要再見面'],
+  ['お名前は何ですか？','o-na-ma-e-wa-nan-de-su-ka','你叫什麼名字？'],
+  ['下北沢は初めてです','shi-mo-ki-ta-za-wa-wa-ha-ji-me-te-de-su','第一次來下北澤'],
+  ['これはいくらですか？','ko-re-wa-i-ku-ra-de-su-ka','這個多少錢？'],
+  ['道に迷いました','mi-chi-ni-ma-yo-i-ma-shi-ta','我迷路了'],
+  ['おすすめは何ですか？','o-su-su-me-wa-nan-de-su-ka','推薦什麼？'],
+  ['カードで払えますか？','ka-a-do-de-ha-ra-e-ma-su-ka','可以刷卡嗎？'],
+  ['明日のライブも行きますか？','a-shi-ta-no-ra-i-bu-mo-i-ki-ma-su-ka','明天的演出也去嗎？'],
+  ['ライブの後はどこへ行きますか？','ra-i-bu-no-a-to-wa-do-ko-e-i-ki-ma-su-ka','演出結束後去哪裡？'],
+  ['今日一緒にいられて良かったです','kyou-is-sho-ni-i-ra-re-te-yo-kat-ta-de-su','今天能在一起很開心'],
+  ['次のライブはどこですか？','tsu-gi-no-ra-i-bu-wa-do-ko-de-su-ka','下一場演出在哪裡？'],
+  ['やっとお会いできました！','yat-to-o-a-i-de-ki-ma-shi-ta','終於見到你了！'],
+  ['今どこにいますか？','i-ma-do-ko-ni-i-ma-su-ka','你現在在哪裡？'],
+  ['ファンが多いですね','fan-ga-ou-i-de-su-ne','你有很多粉絲呢'],
+  ['このビール、いかがですか？','ko-no-bi-i-ru-i-ka-ga-de-su-ka','這啤酒怎麼樣？'],
+  ['日本食が大好きです','ni-hon-sho-ku-ga-da-i-su-ki-de-su','我非常喜歡日本料理'],
+  ['よく来ますか？','yo-ku-ki-ma-su-ka','你常來這裡嗎？'],
+  ['台湾にもインディーシーンがあります','ta-i-wan-ni-mo-in-di-i-shiin-ga-a-ri-ma-su','台灣也有獨立音樂圈'],
+  ['まだ上手じゃないですが練習中です','ma-da-jou-zu-ja-na-i-de-su-ga-ren-shuu-chuu-de-su','還不太會但在練習中'],
+  ['日本語を教えてください！','ni-hon-go-wo-o-shi-e-te-ku-da-sa-i','教我日文！'],
+  ['ソウルを感じる演奏でした','sou-ru-wo-kan-ji-ru-en-sou-de-shi-ta','充滿靈魂感的演奏'],
+  ['次のアルバムはいつ出ますか？','tsu-gi-no-a-ru-ba-mu-wa-i-tsu-de-ma-su-ka','下一張專輯什麼時候出？'],
+  ['おすすめのお店を教えてください','o-su-su-me-no-o-mi-se-wo-o-shi-e-te-ku-da-sa-i','請推薦餐廳'],
+];
+
+const CHA_KR = [
+  {p:'你想說「演出真的太棒了」，在音樂節跟韓國樂手說。',a:'공연 너무 좋았어요!',h:'공연=演出，너무=太，좋았어요=很棒（過去式）'},
+  {p:'你想問對方「你從哪個國家來？」',a:'어느 나라에서 오셨어요?',h:'어느 나라=哪個國家，에서=從，오셨어요=來了（敬語）'},
+  {p:'你想說「想跟你合作」。',a:'같이 작업하고 싶어요.',h:'같이=一起，작업하다=合作，싶어요=想要'},
+  {p:'在居酒屋，你想說「要喝一杯啤酒嗎？」',a:'맥주 한잔 할래요?',h:'맥주=啤酒，한잔=一杯，할래요=要...嗎'},
+  {p:'你想邀請對方「一定要來台灣演出」。',a:'대만에도 꼭 와주세요.',h:'대만에도=也到台灣，꼭=一定，와주세요=請來'},
+  {p:'道別時說「下次一定要再見面」。',a:'다음에 꼭 만나요.',h:'다음에=下次，꼭=一定，만나요=見面'},
+  {p:'你想問「可以交換聯絡方式嗎？」',a:'연락처 교환할 수 있어요?',h:'연락처=聯絡方式，교환=交換，할 수 있어요=可以嗎'},
+  {p:'你想說「今天真的很開心」。',a:'오늘 진짜 즐거웠어요.',h:'오늘=今天，진짜=真的，즐거웠어요=很開心（過去式）'},
+  {p:'你在音樂節打招呼並說「我喜歡獨立音樂」。',a:'안녕하세요! 저는 인디 음악 좋아해요.',h:'用 안녕하세요 開頭，加 저는～좋아해요 句型'},
+  {p:'你想說「我是從台灣來的經紀人」。',a:'저는 대만에서 온 매니저예요.',h:'저는=我，대만에서 온=從台灣來的，매니저=經紀人'},
+];
+const CHA_JP = [
+  {p:'你想稱讚說「演出超棒的」。',a:'ライブ、最高でした！',h:'ライブ=現場演出，最高でした=最棒了（過去式敬語）'},
+  {p:'你想問對方「你喜歡什麼音樂？」',a:'どんな音楽が好きですか？',h:'どんな=什麼樣的，音楽=音樂，好きですか=喜歡嗎'},
+  {p:'你想說「非常想跟你們合作」。',a:'ぜひ一緒に仕事したいです。',h:'ぜひ=務必，一緒に=一起，仕事したい=想合作'},
+  {p:'在居酒屋，你想說「要喝啤酒嗎？」',a:'ビールはいかがですか？',h:'ビール=啤酒，いかがですか=怎麼樣（禮貌邀請）'},
+  {p:'你想邀請對方「希望你們來台灣演出」。',a:'台湾でぜひライブをしてください。',h:'台湾で=在台灣，ぜひ=務必，ライブをしてください=請來演出'},
+  {p:'道別時說「下次一定要再見面」。',a:'また絶対会いましょう。',h:'また=再次，絶対=絕對，会いましょう=見面吧'},
+  {p:'你想問「可以交換聯絡方式嗎？」',a:'連絡先を交換できますか？',h:'連絡先=聯絡方式，交換=交換，できますか=可以嗎'},
+  {p:'你想說「今天真的很開心」。',a:'今日は本当に楽しかったです。',h:'今日は=今天，本当に=真的，楽しかったです=很開心（過去式）'},
+  {p:'你想打招呼說「初次見面，我是從台灣來的」。',a:'はじめまして、台湾から来ました。',h:'はじめまして=初次見面，台湾から来ました=從台灣來'},
+  {p:'你想說「我是從台灣來的經紀人」。',a:'台湾からのマネージャーです。',h:'台湾からの=從台灣來的，マネージャー=經紀人'},
+];
+
+// ── STORAGE ──────────────────────────────────────────────
+function gs(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch{return d;}}
+function ss(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch{}}
+function todayStr(){return new Date().toISOString().slice(0,10);}
+function dayIdx(){return Math.floor((Date.now()-new Date('2025-01-01').getTime())/86400000);}
+
+function updateStreak(){
+  const today=todayStr();
+  let {streak=0,lastDate=''}=gs('streak_data',{});
+  const yesterday=new Date(Date.now()-86400000).toISOString().slice(0,10);
+  if(lastDate!==today){streak=(lastDate===yesterday)?streak+1:1;ss('streak_data',{streak,lastDate:today});}
+  document.getElementById('streakNum').textContent=streak;
+}
+
+// ── TODAY PAGE ──────────────────────────────────────────
+function renderToday(){
+  const di=dayIdx();
+  const wods=lang==='kr'?WOD_KR:WOD_JP;
+  const phrases=lang==='kr'?PHRASES_KR:PHRASES_JP;
+  const chas=lang==='kr'?CHA_KR:CHA_JP;
+  const wod=wods[di%wods.length];
+  const tp=[0,1,2].map(i=>phrases[(di*3+i)%phrases.length]);
+  const ch=chas[di%chas.length];
+  const now=new Date();
+  const wd=['日','一','二','三','四','五','六'];
+  document.getElementById('todayDate').textContent=`${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()} 週${wd[now.getDay()]} · ${lang==='kr'?'韓文':'日文'}今日課程`;
+  const done=gs('done_days',[]);
+  const total=done.length;
+  const phase=total<30?1:total<90?2:total<180?3:4;
+  document.getElementById('levelBadge').textContent=`第${phase}階段·${['','入門','初級','中級','中高級'][phase]}`;
+  const acc=lang==='kr'?'var(--accent-kr)':'var(--accent-jp)';
+  const todayDone=done.includes(todayStr());
+  let dots='';
+  for(let i=6;i>=0;i--){
+    const d=new Date(Date.now()-i*86400000);
+    const ds=d.toISOString().slice(0,10);
+    const cls=done.includes(ds)?'done':(i===0?'today-dot':'');
+    dots+=`<div class="week-dot ${cls}"><span style="font-size:9px">${wd[d.getDay()]}</span><span>${done.includes(ds)?'✓':i===0?'●':'·'}</span></div>`;
+  }
+  const langCode=lang==='kr'?'ko-KR':'ja-JP';
+  const wEx=wod.ex.split('—')[0].trim();
+
+  document.getElementById('todayGrid').innerHTML=`
+    <div class="today-card">
+      <div class="tc-header">
+        <span class="tc-title">今日單字</span>
+        <span class="tc-badge">Day ${(di%wods.length)+1} / ${wods.length}</span>
+      </div>
+      <div style="text-align:center">
+        <span class="wod-char" onclick="speak('${esc(wod.c)}','${langCode}')">${wod.c}</span>
+        <div class="wod-roman">${wod.r}</div>
+        <div class="wod-trans">${wod.t}</div>
+        <div class="wod-example" onclick="speak('${esc(wEx)}','${langCode}')">${wod.ex}</div>
+        <span class="play-pill" onclick="speak('${esc(wod.c)}','${langCode}')">▶ 聽發音</span>
+        <div class="wod-tip">💡 ${wod.tip}</div>
+      </div>
+    </div>
+
+    <div class="today-card">
+      <div class="tc-header">
+        <span class="tc-title">今日句型 × 3</span>
+        <span class="tc-badge">每日更新</span>
+      </div>
+      ${tp.map(p=>`<div class="phrase-mini">
+        <div class="phrase-mini-native" onclick="speak('${esc(p[0])}','${langCode}')">${p[0]} <span style="font-size:10px;opacity:.5">▶</span></div>
+        <div class="phrase-mini-roman">${p[1]}</div>
+        <div class="phrase-mini-trans">${p[2]}</div>
+      </div>`).join('')}
+    </div>
+
+    <div class="today-card">
+      <div class="tc-header">
+        <span class="tc-title">今日挑戰</span>
+        <span class="tc-badge">說出來試試</span>
+      </div>
+      <div class="challenge-prompt">${ch.p}</div>
+      <div class="challenge-hint">💡 提示：${ch.h}</div>
+      <input class="challenge-input" id="ci" placeholder="輸入你的答案..." onkeydown="if(event.key==='Enter')checkCha()"/>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <button class="challenge-btn" onclick="checkCha()">確認答案</button>
+        <span class="play-pill" onclick="speak('${esc(ch.a)}','${langCode}')">▶ 聽正確發音</span>
+      </div>
+      <div class="challenge-result" id="cr"></div>
+    </div>
+
+    <div class="today-card">
+      <div class="tc-header">
+        <span class="tc-title">本週進度</span>
+        <span class="tc-badge">累計 ${total} 天</span>
+      </div>
+      <div class="week-dots">${dots}</div>
+      <div style="margin-top:14px">
+        ${[['聽',Math.min(100,total*2)],['說',Math.min(100,total*1.5)],['讀',Math.min(100,total)]].map(([l,p])=>`
+          <div class="progress-row">
+            <div class="progress-lbl">${l}</div>
+            <div class="progress-track"><div class="progress-fill" style="width:${p}%;background:${acc}"></div></div>
+            <div class="progress-pct">${Math.round(p)}%</div>
+          </div>`).join('')}
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6">
+        ${total<30?'🌱 持續練習，第 3 個月就能在音樂節自我介紹了':total<90?'🌿 進展很好！5 分鐘對話能力正在建立中':'🌳 已進入中級！嘗試不看提示說話'}
+      </div>
+      <button class="done-btn ${todayDone?'completed':''}" onclick="markDone()">${todayDone?'✓ 今日已完成':'✓ 完成今日課程'}</button>
+    </div>
+  `;
+}
+
+function markDone(){
+  const today=todayStr();const done=gs('done_days',[]);
+  if(!done.includes(today)){done.push(today);ss('done_days',done);}
+  updateStreak();renderToday();
+}
+
+function checkCha(){
+  const di=dayIdx();const pool=lang==='kr'?CHA_KR:CHA_JP;const ch=pool[di%pool.length];
+  const input=document.getElementById('ci').value.trim();if(!input)return;
+  const strip=s=>s.replace(/[。！？.!? ]/g,'').trim();
+  const isGood=strip(input)===strip(ch.a);
+  const isClose=!isGood&&(strip(input).slice(0,4)===strip(ch.a).slice(0,4));
+  const cr=document.getElementById('cr');cr.style.display='block';
+  cr.className='challenge-result '+(isGood?'result-good':'result-ok');
+  cr.innerHTML=isGood?`✓ 完全正確！<br><strong>${ch.a}</strong>`:
+    `${isClose?'↗ 很接近！':'△ 再試試：'}<strong>${ch.a}</strong><br><span style="font-size:11px;opacity:.8">提示：${ch.h}</span>`;
+  speak(ch.a,lang==='kr'?'ko-KR':'ja-JP');
+}
+
+// ── ALPHABET ─────────────────────────────────────────────
+const ALPHA={
+  kr:{title:'韓文字母 한글',groups:[
+    {g:'母音 Vowels',cs:[{c:'ㅏ',r:'a',h:'like "ah"'},{c:'ㅑ',r:'ya',h:'like "yah"'},{c:'ㅓ',r:'eo',h:'like "uh"'},{c:'ㅕ',r:'yeo',h:'like "yuh"'},{c:'ㅗ',r:'o',h:'like "oh"'},{c:'ㅛ',r:'yo',h:'like "yo"'},{c:'ㅜ',r:'u',h:'like "oo"'},{c:'ㅠ',r:'yu',h:'like "you"'},{c:'ㅡ',r:'eu',h:'"uh" flat lips'},{c:'ㅣ',r:'i',h:'like "ee"'},{c:'ㅐ',r:'ae',h:'like "eh"'},{c:'ㅔ',r:'e',h:'like "eh"'}]},
+    {g:'子音 Consonants',cs:[{c:'ㄱ',r:'g/k',h:'soft g or k'},{c:'ㄴ',r:'n'},{c:'ㄷ',r:'d/t',h:'soft d or t'},{c:'ㄹ',r:'r/l',h:'flap r or l'},{c:'ㅁ',r:'m'},{c:'ㅂ',r:'b/p',h:'soft b or p'},{c:'ㅅ',r:'s'},{c:'ㅇ',r:'ng/-',h:'silent or ng'},{c:'ㅈ',r:'j'},{c:'ㅊ',r:'ch'},{c:'ㅋ',r:'k',h:'hard k'},{c:'ㅌ',r:'t',h:'hard t'},{c:'ㅍ',r:'p',h:'hard p'},{c:'ㅎ',r:'h'}]},
+    {g:'雙子音 Double',cs:[{c:'ㄲ',r:'kk',h:'tense k'},{c:'ㄸ',r:'tt',h:'tense t'},{c:'ㅃ',r:'pp',h:'tense p'},{c:'ㅆ',r:'ss',h:'tense s'},{c:'ㅉ',r:'jj',h:'tense j'}]},
+  ]},
+  jp:{title:'日文字母 ひらがな',groups:[
+    {g:'あ行',cs:[{c:'あ',r:'a',h:'ah'},{c:'い',r:'i',h:'ee'},{c:'う',r:'u',h:'oo'},{c:'え',r:'e',h:'eh'},{c:'お',r:'o',h:'oh'}]},
+    {g:'か行',cs:[{c:'か',r:'ka'},{c:'き',r:'ki'},{c:'く',r:'ku'},{c:'け',r:'ke'},{c:'こ',r:'ko'}]},
+    {g:'さ行',cs:[{c:'さ',r:'sa'},{c:'し',r:'shi'},{c:'す',r:'su'},{c:'せ',r:'se'},{c:'そ',r:'so'}]},
+    {g:'た行',cs:[{c:'た',r:'ta'},{c:'ち',r:'chi'},{c:'つ',r:'tsu',h:'tsu'},{c:'て',r:'te'},{c:'と',r:'to'}]},
+    {g:'な行',cs:[{c:'な',r:'na'},{c:'に',r:'ni'},{c:'ぬ',r:'nu'},{c:'ね',r:'ne'},{c:'の',r:'no'}]},
+    {g:'は行',cs:[{c:'は',r:'ha'},{c:'ひ',r:'hi'},{c:'ふ',r:'fu',h:'soft fu'},{c:'へ',r:'he'},{c:'ほ',r:'ho'}]},
+    {g:'ま行',cs:[{c:'ま',r:'ma'},{c:'み',r:'mi'},{c:'む',r:'mu'},{c:'め',r:'me'},{c:'も',r:'mo'}]},
+    {g:'や・ら・わ行',cs:[{c:'や',r:'ya'},{c:'ゆ',r:'yu'},{c:'よ',r:'yo'},{c:'ら',r:'ra',h:'flap r'},{c:'り',r:'ri'},{c:'る',r:'ru'},{c:'れ',r:'re'},{c:'ろ',r:'ro'},{c:'わ',r:'wa'},{c:'を',r:'wo',h:'particle'},{c:'ん',r:'n',h:'nasal n'}]},
+  ]},
+};
+
+function renderAlphabet(){
+  const d=ALPHA[lang];
+  document.getElementById('alphaTitle').textContent=d.title;
+  const lc=lang==='kr'?'ko-KR':'ja-JP';
+  document.getElementById('alphaContent').innerHTML=d.groups.map(g=>`
+    <div class="sec-div">${g.g}</div>
+    <div class="alpha-grid">${g.cs.map(c=>`
+      <div class="alpha-card" onclick="speakChar('${esc(c.c)}','${lc}',this)">
+        <div class="alpha-char">${c.c}</div>
+        <div class="alpha-roman">${c.r||''}</div>
+        ${c.h?`<div class="alpha-hint">${c.h}</div>`:''}
+      </div>`).join('')}</div>`).join('');
+}
+
+function speakChar(c,lc,el){
+  document.querySelectorAll('.alpha-card.playing').forEach(x=>x.classList.remove('playing'));
+  el.classList.add('playing');
+  speak(c,lc,()=>el.classList.remove('playing'));
+}
+
+// ── PHRASES ──────────────────────────────────────────────
+const SCENARIOS={
+  kr:[
+    {id:'intro',label:'打招呼',phrases:[
+      {n:'안녕하세요, 처음 뵙겠습니다',r:'an-nyeong-ha-se-yo cheo-eum boep-get-sseum-ni-da',t:'你好，初次見面'},
+      {n:'저는 ___예요, 잘 부탁드려요',r:'jeo-neun ___ ye-yo jal bu-tak-deu-ryeo-yo',t:'我是___，請多關照'},
+      {n:'어디서 오셨어요?',r:'eo-di-seo o-syeo-sseo-yo',t:'你從哪裡來？'},
+      {n:'대만에서 왔어요',r:'dae-man-e-seo wa-sseo-yo',t:'我從台灣來'},
+      {n:'한국은 처음이에요?',r:'han-gu-geun cheo-eu-mi-e-yo',t:'是第一次來韓國嗎？'},
+      {n:'무슨 일 하세요?',r:'mu-seun il ha-se-yo',t:'你是做什麼工作的？'},
+      {n:'연락처 교환할 수 있어요?',r:'yeol-lak-cheo gyo-hwan-hal su i-sseo-yo',t:'可以交換聯絡方式嗎？'},
+      {n:'인스타 알려드릴까요?',r:'in-seu-ta al-lyeo-deu-ril-kka-yo',t:'要給你我的 Instagram 嗎？'},
+    ]},
+    {id:'smalltalk',label:'日常閒聊',phrases:[
+      {n:'요즘 어떻게 지내요?',r:'yo-jeum eo-tteo-ke ji-nae-yo',t:'最近過得怎樣？'},
+      {n:'바쁘게 지내고 있어요',r:'ba-ppeu-ge ji-nae-go i-sseo-yo',t:'過得很忙'},
+      {n:'주말에 뭐 해요?',r:'ju-ma-re mwo hae-yo',t:'週末做什麼？'},
+      {n:'취미가 뭐예요?',r:'chwi-mi-ga mwo-ye-yo',t:'你的興趣是什麼？'},
+      {n:'저는 음악이랑 여행 좋아해요',r:'jeo-neun eu-ma-gi-rang yeo-haeng jo-a-hae-yo',t:'我喜歡音樂和旅行'},
+      {n:'한국 음식 좋아해요?',r:'han-guk eu-msik jo-a-hae-yo',t:'你喜歡韓國料理嗎？'},
+      {n:'진짜요? 저도요!',r:'jin-jja-yo jeo-do-yo',t:'真的嗎？我也是！'},
+      {n:'언제 또 만나요?',r:'eon-je tto man-na-yo',t:'什麼時候再見？'},
+    ]},
+    {id:'music',label:'聊音樂',phrases:[
+      {n:'어떤 음악 좋아해요?',r:'eo-tteon eu-mak jo-a-hae-yo',t:'你喜歡什麼音樂？'},
+      {n:'요즘 뭐 듣고 있어요?',r:'yo-jeum mwo deut-go i-sseo-yo',t:'最近在聽什麼？'},
+      {n:'이 노래 들어봤어요?',r:'i no-rae deu-reo-bwa-sseo-yo',t:'你聽過這首歌嗎？'},
+      {n:'공연 자주 가요?',r:'gong-yeon ja-ju ga-yo',t:'你常去看演出嗎？'},
+      {n:'오늘 누구 제일 기대돼요?',r:'o-neul nu-gu je-il gi-dae-dwae-yo',t:'今天你最期待誰？'},
+      {n:'분위기 진짜 좋아요',r:'bun-wi-gi jin-jja jo-a-yo',t:'氣氛真的很棒'},
+      {n:'대만 음악도 들어봐요',r:'dae-man eu-mak-do deu-reo-bwa-yo',t:'也聽聽看台灣的音樂吧'},
+      {n:'같이 공연 보러 가요!',r:'ga-chi gong-yeon bo-reo ga-yo',t:'一起去看演出吧！'},
+    ]},
+    {id:'eat',label:'吃喝玩樂',phrases:[
+      {n:'같이 밥 먹을래요?',r:'ga-chi bap meo-geul-lae-yo',t:'要一起吃飯嗎？'},
+      {n:'맛집 추천해 줘요',r:'mat-jip chu-cheon-hae jwo-yo',t:'推薦好吃的地方'},
+      {n:'여기 뭐가 유명해요?',r:'yeo-gi mwo-ga yu-myeong-hae-yo',t:'這裡什麼有名？'},
+      {n:'완전 맛있어요!',r:'wan-jeon ma-si-sseo-yo',t:'超好吃！'},
+      {n:'맥주 한잔 더 할래요?',r:'maek-ju han-jan deo hal-lae-yo',t:'要再喝一杯啤酒嗎？'},
+      {n:'여기 자주 와요?',r:'yeo-gi ja-ju wa-yo',t:'你常來這裡嗎？'},
+      {n:'다음에 같이 가요',r:'da-eum-e ga-chi ga-yo',t:'下次一起去吧'},
+      {n:'오늘 너무 즐거웠어요',r:'o-neul neo-mu jeul-geo-wo-sseo-yo',t:'今天真的很開心'},
+    ]},
+    {id:'travel',label:'旅遊問路',phrases:[
+      {n:'홍대 어떻게 가요?',r:'hong-dae eo-tteo-ke ga-yo',t:'弘大怎麼去？'},
+      {n:'여기서 걸어서 갈 수 있어요?',r:'yeo-gi-seo geo-reo-seo gal su i-sseo-yo',t:'從這裡可以走路去嗎？'},
+      {n:'이거 얼마예요?',r:'i-geo eol-ma-ye-yo',t:'這個多少錢？'},
+      {n:'카드 돼요?',r:'ka-deu dwae-yo',t:'可以刷卡嗎？'},
+      {n:'길을 잃었어요',r:'gi-reul i-reo-sseo-yo',t:'我迷路了'},
+      {n:'사진 찍어 드릴까요?',r:'sa-jin jji-geo deu-ril-kka-yo',t:'需要幫你拍照嗎？'},
+      {n:'같이 찍어요!',r:'ga-chi jji-geo-yo',t:'一起拍吧！'},
+      {n:'건배!',r:'geon-bae',t:'乾杯！'},
+    ]},
+  ],
+  jp:[
+    {id:'intro',label:'打招呼',phrases:[
+      {n:'はじめまして',r:'ha-ji-me-ma-shi-te',t:'初次見面'},
+      {n:'___です、よろしくお願いします',r:'___ de-su yo-ro-shi-ku o-ne-gai-shi-ma-su',t:'我是___，請多關照'},
+      {n:'どちらからいらっしゃいましたか？',r:'do-chi-ra-ka-ra i-ra-ssha-i-ma-shi-ta-ka',t:'你從哪裡來？'},
+      {n:'台湾から来ました',r:'ta-i-wan ka-ra ki-ma-shi-ta',t:'我從台灣來'},
+      {n:'日本は初めてですか？',r:'ni-hon-wa ha-ji-me-te-de-su-ka',t:'是第一次來日本嗎？'},
+      {n:'お仕事は何をされてますか？',r:'o-shi-go-to wa na-ni wo sa-re-te-ma-su-ka',t:'你是做什麼工作的？'},
+      {n:'連絡先を交換できますか？',r:'ren-ra-ku-sa-ki wo kou-kan-de-ki-ma-su-ka',t:'可以交換聯絡方式嗎？'},
+      {n:'インスタ教えてもらえますか？',r:'in-su-ta o-shi-e-te-mo-ra-e-ma-su-ka',t:'可以給我你的 Instagram 嗎？'},
+    ]},
+    {id:'smalltalk',label:'日常閒聊',phrases:[
+      {n:'最近どうですか？',r:'sai-kin dou-de-su-ka',t:'最近怎樣？'},
+      {n:'忙しく過ごしています',r:'i-so-ga-shi-ku su-go-shi-te-i-ma-su',t:'過得很忙'},
+      {n:'週末は何をしますか？',r:'shuu-ma-tsu-wa na-ni-wo-shi-ma-su-ka',t:'週末做什麼？'},
+      {n:'趣味は何ですか？',r:'shu-mi-wa nan-de-su-ka',t:'你的興趣是什麼？'},
+      {n:'音楽と旅行が好きです',r:'on-ga-ku-to-ryo-kou-ga-su-ki-de-su',t:'我喜歡音樂和旅行'},
+      {n:'日本食は好きですか？',r:'ni-hon-sho-ku-wa su-ki-de-su-ka',t:'你喜歡日本料理嗎？'},
+      {n:'そうですか！私もです！',r:'sou-de-su-ka wa-ta-shi-mo-de-su',t:'這樣啊！我也是！'},
+      {n:'またいつか会いましょう',r:'ma-ta i-tsu-ka a-i-ma-shou',t:'改天再見面吧'},
+    ]},
+    {id:'music',label:'聊音樂',phrases:[
+      {n:'どんな音楽が好きですか？',r:'don-na on-ga-ku ga su-ki-de-su-ka',t:'你喜歡什麼音樂？'},
+      {n:'最近何を聴いてますか？',r:'sai-kin na-ni wo ki-i-te-ma-su-ka',t:'最近在聽什麼？'},
+      {n:'この曲知ってますか？',r:'ko-no kyo-ku shi-tte-ma-su-ka',t:'你知道這首歌嗎？'},
+      {n:'ライブはよく行きますか？',r:'ra-i-bu-wa yo-ku i-ki-ma-su-ka',t:'你常去看 live 嗎？'},
+      {n:'今日誰が一番楽しみですか？',r:'kyou da-re-ga i-chi-ban ta-no-shi-mi-de-su-ka',t:'今天你最期待誰？'},
+      {n:'雰囲気が最高ですね',r:'fun-i-ki-ga sa-i-kou-de-su-ne',t:'氣氛真的超棒'},
+      {n:'台湾の音楽も聴いてみてください',r:'ta-i-wan-no on-ga-ku-mo ki-i-te-mi-te-ku-da-sa-i',t:'也聽聽看台灣的音樂吧'},
+      {n:'一緒にライブ行きましょう！',r:'is-sho-ni ra-i-bu i-ki-ma-shou',t:'一起去看 live 吧！'},
+    ]},
+    {id:'eat',label:'吃喝玩樂',phrases:[
+      {n:'一緒にご飯食べませんか？',r:'is-sho-ni go-han ta-be-ma-sen-ka',t:'要一起吃飯嗎？'},
+      {n:'おすすめのお店はありますか？',r:'o-su-su-me-no o-mi-se-wa a-ri-ma-su-ka',t:'有推薦的店嗎？'},
+      {n:'ここは何が有名ですか？',r:'ko-ko-wa na-ni-ga yu-mei-de-su-ka',t:'這裡什麼有名？'},
+      {n:'めちゃくちゃおいしい！',r:'me-cha-ku-cha o-i-shi-i',t:'超好吃！'},
+      {n:'もう一杯飲みませんか？',r:'mou ip-pai no-mi-ma-sen-ka',t:'要再喝一杯嗎？'},
+      {n:'ここはよく来ますか？',r:'ko-ko-wa yo-ku ki-ma-su-ka',t:'你常來這裡嗎？'},
+      {n:'また一緒に行きましょう',r:'ma-ta is-sho-ni i-ki-ma-shou',t:'下次一起再去吧'},
+      {n:'今日は本当に楽しかったです',r:'kyou-wa hon-tou-ni ta-no-shi-kat-ta-de-su',t:'今天真的很開心'},
+    ]},
+    {id:'travel',label:'旅遊問路',phrases:[
+      {n:'渋谷へはどう行きますか？',r:'shi-bu-ya e-wa dou i-ki-ma-su-ka',t:'去澀谷怎麼走？'},
+      {n:'ここから歩いて行けますか？',r:'ko-ko-ka-ra a-ru-i-te i-ke-ma-su-ka',t:'從這裡可以走路去嗎？'},
+      {n:'これはいくらですか？',r:'ko-re wa i-ku-ra-de-su-ka',t:'這個多少錢？'},
+      {n:'カードで払えますか？',r:'ka-a-do de ha-ra-e-ma-su-ka',t:'可以刷卡嗎？'},
+      {n:'道に迷いました',r:'mi-chi ni ma-yo-i-ma-shi-ta',t:'我迷路了'},
+      {n:'写真を撮りましょうか？',r:'sha-shin wo to-ri-ma-shou-ka',t:'需要幫你拍照嗎？'},
+      {n:'一緒に撮りましょう！',r:'is-sho-ni to-ri-ma-shou',t:'一起拍吧！'},
+      {n:'乾杯！',r:'kan-pai',t:'乾杯！'},
+    ]},
+  ],
+};
+
+const CHAT_SCENARIOS={
+  kr:[
+    {id:'meet',label:'🙌 第一次見面',hint:'音樂節或活動上剛認識的韓國人，互相打招呼認識',sys:'你是在韓國音樂節上剛認識的年輕韓國人。場合輕鬆，你們剛第一次見面，正在互相認識。用韓文對話，自然口語，適合初學者。每次回覆格式：\n韓文句子\n[羅馬拼音]\n（中文翻譯）\n\n💡 提示：說明這個句型的用法或文化背景。'},
+    {id:'smalltalk',label:'💬 日常閒聊',hint:'和新認識的韓國朋友聊興趣、生活、週末',sys:'你是一個韓國年輕人，剛認識了一位台灣人，正在閒聊興趣、生活和週末規劃。語氣輕鬆友善，偶爾用一點口語。每次回覆格式：\n韓文句子\n[羅馬拼音]\n（中文翻譯）\n\n💡 提示：說明句型用法或閒聊小技巧。'},
+    {id:'music',label:'🎵 聊音樂',hint:'和韓國音樂愛好者輕鬆聊聊喜歡的音樂',sys:'你是個喜歡獨立音樂的韓國人，正在和台灣音樂愛好者閒聊音樂。話題圍繞喜歡的歌、最近在聽什麼、有沒有一起去看演出等。語氣自然輕鬆，不是業務討論。每次回覆格式：\n韓文句子\n[羅馬拼音]\n（中文翻譯）\n\n💡 提示：說明句型用法。'},
+    {id:'eat',label:'🍺 吃喝玩樂',hint:'和新朋友約吃飯喝酒，聊餐廳推薦',sys:'你是首爾在地人，帶著新認識的台灣朋友去吃飯或喝酒，推薦好去處、聊食物、享受聚會氣氛。語氣輕鬆活潑。每次回覆格式：\n韓文句子\n[羅馬拼音]\n（中文翻譯）\n\n💡 提示：說明句型用法或飲食文化。'},
+  ],
+  jp:[
+    {id:'meet',label:'🙌 第一次見面',hint:'音樂節或活動上剛認識的日本人，互相打招呼',sys:'你是在日本音樂節上剛認識的年輕日本人。場合輕鬆，你們剛第一次見面，正在互相認識。用日文對話，使用ですます敬語但語氣自然。每次回覆格式：\n日文句子\n[羅馬拼音]\n（中文翻譯）\n\n💡 提示：說明句型用法或日本文化背景。'},
+    {id:'smalltalk',label:'💬 日常閒聊',hint:'和新認識的日本朋友聊興趣、生活、週末',sys:'你是一個日本年輕人，剛認識了一位台灣人，正在閒聊興趣、生活和週末規劃。語氣輕鬆友善。每次回覆格式：\n日文句子\n[羅馬拼音]\n（中文翻譯）\n\n💡 提示：說明句型用法或日本閒聊習慣。'},
+    {id:'music',label:'🎵 聊音樂',hint:'和日本音樂愛好者輕鬆聊聊喜歡的音樂',sys:'你是個喜歡獨立音樂的日本人，正在和台灣音樂愛好者閒聊音樂。話題圍繞喜歡的歌、最近在聽什麼、有沒有一起去看 live 等。語氣自然輕鬆。每次回覆格式：\n日文句子\n[羅馬拼音]\n（中文翻譯）\n\n💡 提示：說明句型用法。'},
+    {id:'eat',label:'🍺 吃喝玩樂',hint:'和新朋友去居酒屋吃喝，聊推薦去處',sys:'你是東京在地人，帶著新認識的台灣朋友去居酒屋或餐廳，推薦好去處、聊食物、享受聚會氣氛。語氣輕鬆。每次回覆格式：\n日文句子\n[羅馬拼音]\n（中文翻譯）\n\n💡 提示：說明句型用法或日本飲食文化。'},
+  ],
+};
+
+function renderScenarioTabs(){
+  const sc=SCENARIOS[lang];
+  document.getElementById('scenarioTabs').innerHTML=sc.map((s,i)=>
+    `<button class="s-tab ${i===0?'active':''}" onclick="selectSc('${s.id}',this)">${s.label}</button>`).join('');
+  selectSc(sc[0].id,null);
+}
+
+function selectSc(id,el){
+  if(el){document.querySelectorAll('.s-tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');}
+  const s=SCENARIOS[lang].find(s=>s.id===id);if(!s)return;
+  const lc=lang==='kr'?'ko-KR':'ja-JP';
+  document.getElementById('phrasesList').innerHTML=s.phrases.map(p=>`
+    <div class="phrase-row" onclick="speakPhrase('${esc(p.n)}','${lc}',this)">
+      <div class="phrase-main">
+        <div class="phrase-native">${p.n}</div>
+        <div class="phrase-roman">${p.r}</div>
+        <div class="phrase-trans">${p.t}</div>
+      </div>
+      <div class="play-circle">▶</div>
+    </div>`).join('');
+}
+
+function speakPhrase(t,lc,el){
+  document.querySelectorAll('.phrase-row.playing').forEach(r=>r.classList.remove('playing'));
+  el.classList.add('playing');speak(t,lc,()=>el.classList.remove('playing'));
+}
+
+// ── CHAT ─────────────────────────────────────────────────
+function renderChatConfig(){
+  const sc=CHAT_SCENARIOS[lang];
+  document.getElementById('chatConfig').innerHTML='<span class="config-label">場景：</span>'+
+    sc.map((s,i)=>`<button class="config-btn ${i===0?'active':''}" onclick="selectChat('${s.id}',this)">${s.label}</button>`).join('');
+  selectChat(sc[0].id,null,true);
+}
+
+function selectChat(id,el,silent){
+  if(el){document.querySelectorAll('.config-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');}
+  activeChat=CHAT_SCENARIOS[lang].find(s=>s.id===id);
+  if(activeChat)document.getElementById('chatHint').textContent='📍 '+activeChat.hint;
+  if(!silent){chatHistory=[];renderChatIntro();}
+}
+
+function renderChatIntro(){
+  const starters=lang==='kr'
+    ?['안녕하세요! 처음 뵙겠습니다','어떤 음악 좋아해요?','요즘 어떻게 지내요?','같이 밥 먹을래요?']
+    :['はじめまして！','どんな音楽が好きですか？','最近どうですか？','一緒にご飯食べませんか？'];
+  document.getElementById('chatMessages').innerHTML=`<div class="chat-intro">
+    <div class="chat-intro-title">準備好了嗎？</div>
+    <div class="chat-intro-sub">選一個情境，輸入你想說的話。AI 會用正確發音回覆並解析句子。</div>
+    <div class="starter-btns">${starters.map(s=>`<button class="starter-btn" onclick="useStarter('${esc(s)}')">${s}</button>`).join('')}</div>
+  </div>`;
+}
+
+function useStarter(t){document.getElementById('chatInput').value=t;sendMessage();}
+function esc(s){return(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");}
+
+async function sendMessage(){
+  const inp=document.getElementById('chatInput');
+  const text=inp.value.trim();if(!text||!activeChat)return;
+  inp.value='';inp.style.height='';
+  document.getElementById('chatMessages').querySelector('.chat-intro')?.remove();
+  const msgs=document.getElementById('chatMessages');
+  msgs.innerHTML+=`<div class="msg user"><div class="msg-avatar">你</div><div class="msg-bubble"><div style="font-size:15px">${text}</div></div></div>`;
+  msgs.innerHTML+=`<div class="msg ai" id="typ"><div class="msg-avatar">AI</div><div class="msg-bubble"><div class="typing-dots"><span></span><span></span><span></span></div></div></div>`;
+  msgs.scrollTop=msgs.scrollHeight;
+  document.getElementById('sendBtn').disabled=true;
+  document.getElementById('loadingBar').classList.add('active');
+  chatHistory.push({role:'user',content:text});
+  try{
+    const res=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      model:'claude-sonnet-4-20250514',max_tokens:1000,system:activeChat.sys,messages:chatHistory
+    })});
+    const data=await res.json();
+    const reply=data.content?.[0]?.text||'（抱歉，發生錯誤）';
+    document.getElementById('typ')?.remove();
+    const lines=reply.split('\n').filter(l=>l.trim());
+    let native='',roman='',trans='',tip='';
+    lines.forEach(l=>{
+      if(l.startsWith('[')&&l.endsWith(']'))roman=l.slice(1,-1);
+      else if(l.startsWith('（')&&l.endsWith('）'))trans=l.slice(1,-1);
+      else if(l.startsWith('💡'))tip=l;
+      else if(!native&&!l.startsWith('💡'))native=l;
+    });
+    const st=native||reply;
+    msgs.innerHTML+=`<div class="msg ai"><div class="msg-avatar">AI</div><div class="msg-bubble">
+      ${native?`<div class="msg-native">${native}</div>`:`<div style="font-size:14px;line-height:1.6">${reply}</div>`}
+      ${roman?`<div class="msg-roman">[${roman}]</div>`:''}
+      ${trans?`<div class="msg-trans">（${trans}）</div>`:''}
+      <span class="msg-play" onclick="speakAI('${esc(st)}',this)">▶ 聽發音</span>
+      ${tip?`<div class="msg-tip">${tip}</div>`:''}
+    </div></div>`;
+    msgs.scrollTop=msgs.scrollHeight;
+    speak(st);
+    chatHistory.push({role:'assistant',content:reply});
+  }catch(e){
+    document.getElementById('typ')?.remove();
+    msgs.innerHTML+=`<div class="msg ai"><div class="msg-avatar">AI</div><div class="msg-bubble">（連線錯誤，請再試一次）</div></div>`;
+  }
+  document.getElementById('sendBtn').disabled=false;
+  document.getElementById('loadingBar').classList.remove('active');
+  msgs.scrollTop=msgs.scrollHeight;
+}
+
+function speakAI(t,el){const o=el.textContent;el.textContent='▶ 播放中...';speak(t,lang==='kr'?'ko-KR':'ja-JP',()=>el.textContent=o);}
+function handleEnter(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}}
+
+// ── TTS ──────────────────────────────────────────────────
+function speak(text,lc,onEnd){
+  if(!window.speechSynthesis){if(onEnd)onEnd();return;}
+  window.speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang=lc||(lang==='kr'?'ko-KR':'ja-JP');u.rate=0.85;u.pitch=1;
+  const v=window.speechSynthesis.getVoices().find(v=>v.lang===u.lang||v.lang.startsWith(u.lang.split('-')[0]));
+  if(v)u.voice=v;u.onend=onEnd||null;
+  window.speechSynthesis.speak(u);
+}
+
+// ── VOICE INPUT ───────────────────────────────────────────
+function toggleVoice(){
+  if(!('webkitSpeechRecognition'in window)&&!('SpeechRecognition'in window)){alert('請使用 Chrome 瀏覽器以支援語音輸入');return;}
+  if(isListening){rec.stop();return;}
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  rec=new SR();rec.lang=lang==='kr'?'ko-KR':'ja-JP';rec.interimResults=false;
+  rec.onstart=()=>{isListening=true;document.getElementById('voiceBtn').classList.add('listening');};
+  rec.onresult=e=>{document.getElementById('chatInput').value=e.results[0][0].transcript;};
+  rec.onend=()=>{isListening=false;document.getElementById('voiceBtn').classList.remove('listening');};
+  rec.start();
+}
+
+// ── NAVIGATION ────────────────────────────────────────────
+function setLang(l){
+  lang=l;document.body.className=l;
+  document.querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelector('.lang-btn.'+l).classList.add('active');
+  chatHistory=[];
+  renderToday();renderAlphabet();renderScenarioTabs();renderChatConfig();
+}
+
+function showPage(id,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  el.classList.add('active');
+}
+
+// ── INIT ─────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded',()=>{
+  const ta=document.getElementById('chatInput');
+  ta.addEventListener('input',()=>{ta.style.height='';ta.style.height=ta.scrollHeight+'px';});
+  window.speechSynthesis?.getVoices?.();
+  updateStreak();
+  renderToday();renderAlphabet();renderScenarioTabs();renderChatConfig();
+});
+</script>
+</body>
+</html>
